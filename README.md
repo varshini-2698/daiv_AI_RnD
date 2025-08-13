@@ -38,8 +38,7 @@ For **each domain** (Health, Wealth, Fame, Relationship), we create a forecast t
 
 #### 1. Health Forecast
 
-| Year | Dasha Period | Health Focus | Risk Areas | Astro Remedies | Tips |
-| ---- | ------------ | ------------ | ---------- | -------------- | ---- |
+\| Year | Dasha Period | Health Focus | Risk Areas | Astro Remedies | Tips |
 
 #### 2. Wealth Forecast
 
