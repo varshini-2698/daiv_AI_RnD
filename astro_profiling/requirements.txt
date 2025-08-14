@@ -1,0 +1,5 @@
+prokerala_api
+fastapi
+uvicorn
+python-dotenv
+pydantic
