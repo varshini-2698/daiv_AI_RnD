@@ -1,25 +1,10 @@
-from __future__ import annotations
-
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.config import ALLOW_ORIGINS
-from app.routes.dcharts import router as dcharts_router
+from app.routes.dcharts import router as parsed_router
 
 app = FastAPI(
-    title="DCharts Service",
+    title="Astro Charts Parser API",
     version="1.0.0",
-    description="Fetch Prokerala divisional (D) charts as SVG via FastAPI.",
+    description="Fetch, store SVG (charts only), and return parsed chart JSON + simple summary."
 )
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOW_ORIGINS if ALLOW_ORIGINS != ["*"] else ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Routes
-app.include_router(dcharts_router)
+app.include_router(parsed_router)

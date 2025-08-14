@@ -1,64 +1,33 @@
 from __future__ import annotations
-
 import re
 from pathlib import Path
-from fastapi import HTTPException
+from app.constants import SAVE_ROOT
 
-from app.core.config import DCHARTS_SAVE_DIR
-from app.services.prokerala_client import get_api_client
-
-
-def _safe_slug(text: str | None) -> str:
-    if not text:
-        return ""
+def _slug(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", text).strip("_")
 
-
-def fetch_chart_svg(*,
-                    chart_type: str,
-                    chart_style: str,
-                    dob: str,
-                    tob: str,
-                    offset: str,
-                    lat: float,
-                    lon: float) -> bytes:
+def save_chart_svg(svg_bytes: bytes, *,
+                   name: str,
+                   user_id: str,
+                   phone_number: str,
+                   chart_type: str,
+                   chart_style: str,
+                   dob: str,
+                   tob: str) -> Path:
     """
-    Calls Prokerala chart API and returns raw SVG bytes.
+    Folder structure unchanged: charts/<user_id>/...
+    File name is more self-explanatory:
+      <name>_<user_id>_<phone_number>_<dchart>_<style>_<dob>_<tob>.svg
     """
-    client = get_api_client()
-    api_path = "v2/astrology/chart"
-    params = {
-        "ayanamsa": 1,  # Lahiri
-        "coordinates": f"{lat},{lon}",
-        "datetime": f"{dob}T{tob}{offset}",
-        "chart_type": chart_type,
-        "chart_style": chart_style,
-        "format": "svg",
-    }
-    result = client.get(api_path, params)
+    SAVE_ROOT.mkdir(parents=True, exist_ok=True)
+    folder = SAVE_ROOT / _slug(user_id)
+    folder.mkdir(parents=True, exist_ok=True)
 
-    if isinstance(result, (bytes, bytearray)):
-        return bytes(result)
-
-    raise HTTPException(
-        status_code=502,
-        detail={"message": "Unexpected response from provider", "type": str(type(result))}
+    fname = (
+        f"{_slug(name)}_{_slug(user_id)}_{_slug(phone_number)}_"
+        f"{_slug(chart_type)}_{_slug(chart_style)}_{_slug(dob)}_{_slug(tob.replace(':','-'))}.svg"
     )
 
-
-def save_svg(svg_bytes: bytes, *,
-             user_id: str | None,
-             chart_type: str,
-             chart_style: str,
-             dob: str,
-             tob: str,
-             name: str | None) -> Path:
-    user_dir = DCHARTS_SAVE_DIR / _safe_slug(user_id or "anon")
-    user_dir.mkdir(parents=True, exist_ok=True)
-
-    fname = f"{chart_type}_{chart_style}_{dob}_{tob.replace(':','-')}"
-    if name:
-        fname = f"{_safe_slug(name)}_{fname}"
-    path = user_dir / f"{fname}.svg"
+    path = folder / fname
     path.write_bytes(svg_bytes)
     return path

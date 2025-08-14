@@ -1,67 +1,60 @@
 from __future__ import annotations
-
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import Response, JSONResponse
+from app.constants import SUPPORTED_STYLES
+from app.models.schemas import DChartParsedRequest, DChartParsedResponse, DChartParsedRow
+from app.services.prokerala_client import fetch_chart_svg
+from app.services.dcharts_service import save_chart_svg
+from app.services.parsers.south_indian_dcharts import parse_chart_cells_from_south_indian_svg, simple_summary_lines
 
-from app.constants import ALLOWED_TYPES, ALLOWED_STYLES
-from app.models.schemas import (
-    DChartRequest,
-    DChartFileResult,
-    ChartTypesResponse,
-)
-from app.services.dcharts_service import fetch_chart_svg, save_svg
+router = APIRouter(prefix="", tags=["charts"])
 
-router = APIRouter(prefix="", tags=["dcharts"])
+@router.post("/dcharts-parsed", response_model=DChartParsedResponse)
+def dcharts_parsed(req: DChartParsedRequest):
+    if req.chart_style not in SUPPORTED_STYLES:
+        raise HTTPException(status_code=422, detail=f"Unsupported chart_style: {req.chart_style}. Supported: {', '.join(SUPPORTED_STYLES)}")
 
-
-@router.get("/health")
-def health() -> dict:
-    return {"status": "ok"}
-
-
-@router.get("/chart-types", response_model=ChartTypesResponse)
-def chart_types() -> ChartTypesResponse:
-    return ChartTypesResponse(chart_types=ALLOWED_TYPES, chart_styles=ALLOWED_STYLES)
-
-
-@router.post("/dcharts")
-def generate_dchart(req: DChartRequest):
-    if req.chart_type not in ALLOWED_TYPES:
-        raise HTTPException(status_code=422, detail=f"Unsupported chart_type: {req.chart_type}")
-    if req.chart_style not in ALLOWED_STYLES:
-        raise HTTPException(status_code=422, detail=f"Unsupported chart_style: {req.chart_style}")
-
+    # Fetch SVG
     try:
         svg = fetch_chart_svg(
             chart_type=req.chart_type,
             chart_style=req.chart_style,
+            dob=req.dob, tob=req.tob, offset=req.offset,
+            lat=req.lat, lon=req.lon,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Provider error: {e}")
+
+    # Save SVG (folder structure unchanged)
+    try:
+        _ = save_chart_svg(
+            svg,
+            name=req.name,
+            user_id=req.user_id,
+            phone_number=req.phone_number,
+            chart_type=req.chart_type,
+            chart_style=req.chart_style,
             dob=req.dob,
             tob=req.tob,
-            offset=req.offset,
-            lat=req.lat,
-            lon=req.lon,
         )
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=502, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail=f"Failed to save SVG: {e}")
 
-    if req.return_ == "inline":
-        return Response(content=svg, media_type="image/svg+xml")
+    # Parse chart → JSON
+    try:
+        rows = parse_chart_cells_from_south_indian_svg(svg)
+    except Exception as e:
+        rows = []  # safer fallback
 
-    saved = save_svg(
-        svg,
-        user_id=req.user_id,
-        chart_type=req.chart_type,
-        chart_style=req.chart_style,
-        dob=req.dob,
-        tob=req.tob,
+    summary = simple_summary_lines(req.chart_type, rows)
+
+    return DChartParsedResponse(
+        # echo user info
         name=req.name,
-    )
-    return JSONResponse(
-        DChartFileResult(
-            path=str(saved),
-            filename=saved.name,
-            absolute_path=str(saved.resolve()),
-        ).model_dump()
+        user_id=req.user_id,
+        phone_number=req.phone_number,
+        # chart info
+        dchart=req.chart_type,
+        chart_style=req.chart_style,
+        chart_cells=[DChartParsedRow(**r) for r in rows],
+        simple=summary,
     )
