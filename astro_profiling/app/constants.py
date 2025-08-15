@@ -1,6 +1,6 @@
-from pathlib import Path
 import os
 from enum import Enum
+from pathlib import Path
 
 # Supported chart styles for current parser(s)
 SUPPORTED_STYLES = {"south-indian"}
@@ -23,10 +23,10 @@ PLANET_MAP = {
 # All supported D-charts as Enum
 class ChartType(str, Enum):
     rasi = "rasi"
-    navamsa = "navamsa"
-    lagna = "lagna"
-    trimsamsa = "trimsamsa"
-    drekkana = "drekkana"
+    # navamsa = "navamsa"
+    # lagna = "lagna"
+    # trimsamsa = "trimsamsa"
+    # drekkana = "drekkana"
     # chaturthamsa = "chaturthamsa"
     # dasamsa = "dasamsa"
     # ashtamsa = "ashtamsa"
@@ -48,3 +48,6 @@ ALL_DCHART_TYPES = [c.value for c in ChartType]
 
 # Storage root for saved charts (folder structure unchanged)
 SAVE_ROOT = Path(os.getenv("DCHARTS_SAVE_DIR", "./charts")).resolve()
+
+ASHTAKA_SAVE_ROOT = Path(os.getenv("ASHTAKAVARGA_SAVE_DIR", "./ashtakavarga_charts")).resolve()
+ASHTAKA_SAVE_ROOT.mkdir(parents=True, exist_ok=True)

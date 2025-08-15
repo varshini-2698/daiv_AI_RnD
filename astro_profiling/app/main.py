@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routes.dcharts import router as parsed_router
+from app.routes.ashtakavarga import router as sav_router
 
 app = FastAPI(
     title="Astro Charts Parser API",
@@ -8,3 +9,4 @@ app = FastAPI(
 )
 
 app.include_router(parsed_router)
+app.include_router(sav_router)
