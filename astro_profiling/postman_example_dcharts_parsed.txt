@@ -1,0 +1,47 @@
+POST http://localhost:8080/dcharts-parsed
+Content-Type: application/json
+
+{
+    "name": "Varshini",
+    "user_id": "user123",
+    "phone_number": "+91-9000000000",
+    "dob": "1999-07-24",
+    "tob": "18:25:00",
+    "offset": "+05:30",
+    "lat": 12.96,
+    "lon": 77.57,
+    "chart_type": "rasi",
+    "chart_style": "south-indian"
+}
+
+--- Expected JSON Response ---
+{
+    "name": "Varshini",
+    "user_id": "user123",
+    "phone_number": "+91-9000000000",
+    "dchart": "rasi",
+    "chart_style": "south-indian",
+    "chart_cells": [
+        { "no": 1, "sign_name": "Aries", "planets": ["Jupiter (Ju)", "Saturn (Sa)"] },
+        { "no": 2, "sign_name": "Taurus", "planets": [] },
+        { "no": 3, "sign_name": "Gemini", "planets": [] },
+        { "no": 4, "sign_name": "Cancer", "planets": ["Sun (Su)", "Mercury (Me)", "Rahu (Ra)"] },
+        { "no": 5, "sign_name": "Leo", "planets": ["Venus (Ve)"] },
+        { "no": 6, "sign_name": "Virgo", "planets": [] },
+        { "no": 7, "sign_name": "Libra", "planets": ["Mars (Ma)"] },
+        { "no": 8, "sign_name": "Scorpio", "planets": ["Moon (Mo)"] },
+        { "no": 9, "sign_name": "Sagittarius", "planets": [] },
+        { "no": 10, "sign_name": "Capricorn", "planets": ["Ascendant (Asc)", "Ketu (Ke)"] },
+        { "no": 11, "sign_name": "Aquarius", "planets": [] },
+        { "no": 12, "sign_name": "Pisces", "planets": [] }
+    ],
+    "simple": [
+        "DCHART=RASI",
+        "Jupiter, Saturn in Aries",
+        "Sun, Mercury, Rahu in Cancer",
+        "Venus in Leo",
+        "Mars in Libra",
+        "Moon in Scorpio",
+        "Ascendant, Ketu in Capricorn"
+    ]
+}

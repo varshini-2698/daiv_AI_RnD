@@ -18,3 +18,5 @@ venv/
 # Environment & secrets
 .env
 *.env
+
+charts/
